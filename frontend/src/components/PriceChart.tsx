@@ -12,7 +12,7 @@ export default function PriceChart({ data, baseline }: Props) {
   }
 
   const chartData = data.map(d => ({
-    time: new Date(d.checked_at + 'Z').toLocaleString(undefined, {
+    time: new Date(d.checked_at.replace(' ', 'T') + 'Z').toLocaleString(undefined, {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
