@@ -4,6 +4,7 @@ interface Props {
   results: FlightResult[];
   onTrack: (result: FlightResult) => void;
   trackingId: string | null;
+  passengers: number;
 }
 
 function formatDuration(min: number) {
@@ -12,7 +13,7 @@ function formatDuration(min: number) {
   return `${h}h ${m}m`;
 }
 
-export default function SearchResults({ results, onTrack, trackingId }: Props) {
+export default function SearchResults({ results, onTrack, trackingId, passengers }: Props) {
   if (results.length === 0) {
     return <p className="text-gray-400 mt-4">No flights found.</p>;
   }
@@ -24,6 +25,7 @@ export default function SearchResults({ results, onTrack, trackingId }: Props) {
           ? r.legs.map(l => l.departure_airport).join(' \u2192 ') + ` \u2192 ${r.legs[r.legs.length - 1].arrival_airport}`
           : `${r.origin} \u2192 ${r.destination}`;
         const key = `${r.flight_codes}_${r.departure_time}`;
+        const perPerson = passengers > 1 ? Math.round(r.price / passengers) : null;
 
         return (
           <div key={key} className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
@@ -39,7 +41,12 @@ export default function SearchResults({ results, onTrack, trackingId }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-xl font-bold text-green-400">${r.price}</span>
+              <div className="text-right">
+                <span className="text-xl font-bold text-green-400">${r.price}</span>
+                {perPerson !== null && (
+                  <div className="text-xs text-gray-400">${perPerson}/person</div>
+                )}
+              </div>
               <button
                 onClick={() => onTrack(r)}
                 disabled={trackingId === key}

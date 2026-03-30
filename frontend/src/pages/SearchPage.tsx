@@ -45,7 +45,7 @@ export default function SearchPage() {
         <p className="text-red-400 mt-4">Search failed: {String(searchM.error)}</p>
       )}
       {results && (
-        <SearchResults results={results} onTrack={handleTrack} trackingId={trackingId} />
+        <SearchResults results={results} onTrack={handleTrack} trackingId={trackingId} passengers={lastSearch?.adults ?? 1} />
       )}
     </div>
   );
