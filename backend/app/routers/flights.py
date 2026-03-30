@@ -122,9 +122,10 @@ async def track_flight(req: TrackFlightRequest):
 async def delete_flight(flight_id: int):
     db = await get_db()
     try:
-        cursor = await db.execute(
-            "DELETE FROM tracked_flights WHERE id = ?", (flight_id,)
-        )
+        await db.execute("DELETE FROM notifications WHERE tracked_flight_id = ?", (flight_id,))
+        await db.execute("DELETE FROM price_history WHERE tracked_flight_id = ?", (flight_id,))
+        await db.execute("DELETE FROM search_configs WHERE tracked_flight_id = ?", (flight_id,))
+        cursor = await db.execute("DELETE FROM tracked_flights WHERE id = ?", (flight_id,))
         await db.commit()
         if cursor.rowcount == 0:
             raise HTTPException(404, "Flight not found")
