@@ -42,6 +42,7 @@ async def _build_response(row) -> TrackedFlightResponse:
             arrival_time=row["arrival_time"],
             stops=row["stops"],
             duration=row["duration"],
+            adults=row["adults"] if "adults" in row.keys() else 1,
             label=row["label"],
             is_active=bool(row["is_active"]),
             created_at=row["created_at"],
@@ -73,11 +74,12 @@ async def track_flight(req: TrackFlightRequest):
         cursor = await db.execute(
             """INSERT INTO tracked_flights
                (origin, destination, travel_date, flight_codes,
-                departure_time, arrival_time, stops, duration, label)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                departure_time, arrival_time, stops, duration, adults, label)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 req.origin, req.destination, req.travel_date, req.flight_codes,
                 req.departure_time, req.arrival_time, req.stops, req.duration,
+                req.adults,
                 req.label or f"{req.origin}→{req.destination} {req.flight_codes}",
             ),
         )

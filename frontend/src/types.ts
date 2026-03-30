@@ -42,6 +42,7 @@ export interface TrackedFlight {
   arrival_time: string;
   stops: number;
   duration: number | null;
+  adults: number;
   label: string | null;
   is_active: boolean;
   created_at: string;

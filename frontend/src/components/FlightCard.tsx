@@ -39,6 +39,9 @@ export default function FlightCard({ flight, onDelete, onToggle }: Props) {
             <span className={`text-2xl font-bold ${priceColor}`}>
               {flight.latest_price !== null ? `$${flight.latest_price.toFixed(0)}` : '--'}
             </span>
+            {flight.adults > 1 && flight.latest_price !== null && (
+              <span className="text-sm text-gray-400">${Math.round(flight.latest_price / flight.adults)}/person</span>
+            )}
             {priceLabel && <span className={`text-sm ${priceColor}`}>{priceLabel}</span>}
             {flight.baseline_price !== null && (
               <span className="text-xs text-gray-500">baseline ${flight.baseline_price.toFixed(0)}</span>

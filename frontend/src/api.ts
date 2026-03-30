@@ -33,6 +33,7 @@ export async function trackFlight(result: FlightResult, search: SearchParams): P
     arrival_time: result.arrival_time,
     stops: result.stops,
     duration: result.duration,
+    adults: search.adults || 1,
     price: result.price,
     search_from_airports: [search.origin],
     search_to_airports: [search.destination],

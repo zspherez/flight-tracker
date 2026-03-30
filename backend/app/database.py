@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS tracked_flights (
     arrival_time    TEXT NOT NULL,
     stops           INTEGER NOT NULL DEFAULT 0,
     duration        INTEGER,
+    adults          INTEGER NOT NULL DEFAULT 1,
     label           TEXT,
     is_active       INTEGER NOT NULL DEFAULT 1,
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),

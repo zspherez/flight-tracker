@@ -44,6 +44,7 @@ class TrackFlightRequest(BaseModel):
     arrival_time: str
     stops: int
     duration: int | None = None
+    adults: int = 1
     label: str | None = None
     price: float
     search_from_airports: list[str]
@@ -64,6 +65,7 @@ class TrackedFlightResponse(BaseModel):
     arrival_time: str
     stops: int
     duration: int | None
+    adults: int
     label: str | None
     is_active: bool
     created_at: str
