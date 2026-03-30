@@ -1,0 +1,10 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+backend/data/
+backend/fli/
+frontend/certs/
+.env
+*.db
+firebase-service-account.json
