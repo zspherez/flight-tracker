@@ -3,7 +3,6 @@ dist/
 __pycache__/
 *.pyc
 backend/data/
-backend/fli/
 frontend/certs/
 .env
 *.db
