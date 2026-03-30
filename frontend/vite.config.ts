@@ -4,6 +4,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 
+const httpsConfig = fs.existsSync('./certs/server.key')
+  ? { key: fs.readFileSync('./certs/server.key'), cert: fs.readFileSync('./certs/server.crt') }
+  : undefined
+
 export default defineConfig({
   plugins: [react()],
   css: {
@@ -12,10 +16,7 @@ export default defineConfig({
     },
   },
   server: {
-    https: {
-      key: fs.readFileSync('./certs/server.key'),
-      cert: fs.readFileSync('./certs/server.crt'),
-    },
+    https: httpsConfig,
     proxy: {
       '/api': 'http://localhost:8000',
     },
