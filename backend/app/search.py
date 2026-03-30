@@ -58,7 +58,7 @@ def _run_search(params: SearchRequest) -> list[FlightResultResponse]:
 
     filters = FlightSearchFilters(
         trip_type=TripType.ONE_WAY,
-        passenger_info=PassengerInfo(adults=1),
+        passenger_info=PassengerInfo(adults=params.adults),
         flight_segments=[segment],
         stops=_resolve_max_stops(params.max_stops),
         seat_type=_resolve_seat_type(params.seat_type),

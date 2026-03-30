@@ -25,6 +25,7 @@ export interface SearchParams {
   destination: string;
   travel_date: string;
   max_stops: string;
+  adults?: number;
   seat_type?: string;
   airlines?: string[];
   layover_airports?: string[];

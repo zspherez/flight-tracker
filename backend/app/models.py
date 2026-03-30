@@ -28,6 +28,7 @@ class SearchRequest(BaseModel):
     destination: str
     travel_date: str
     max_stops: str = "ANY"
+    adults: int = 1
     seat_type: str = "ECONOMY"
     airlines: list[str] | None = None
     layover_airports: list[str] | None = None

@@ -11,6 +11,7 @@ export default function SearchForm({ onSearch, loading }: Props) {
   const [destination, setDestination] = useState('');
   const [travelDate, setTravelDate] = useState('2026-05-10');
   const [maxStops, setMaxStops] = useState('ANY');
+  const [adults, setAdults] = useState(1);
   const [airlines, setAirlines] = useState('');
   const [layoverAirports, setLayoverAirports] = useState('');
 
@@ -21,6 +22,7 @@ export default function SearchForm({ onSearch, loading }: Props) {
       destination: destination.toUpperCase(),
       travel_date: travelDate,
       max_stops: maxStops,
+      adults,
       airlines: airlines ? airlines.split(',').map(a => a.trim().toUpperCase()) : undefined,
       layover_airports: layoverAirports ? layoverAirports.split(',').map(a => a.trim().toUpperCase()) : undefined,
     });
@@ -28,7 +30,7 @@ export default function SearchForm({ onSearch, loading }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-gray-800 rounded-xl p-6 space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div>
           <label className="block text-sm text-gray-400 mb-1">Origin</label>
           <input
@@ -70,6 +72,17 @@ export default function SearchForm({ onSearch, loading }: Props) {
             <option value="NON_STOP">Nonstop</option>
             <option value="ONE_STOP_OR_FEWER">1 stop or fewer</option>
           </select>
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Passengers</label>
+          <input
+            type="number"
+            min={1}
+            max={9}
+            value={adults}
+            onChange={e => setAdults(Number(e.target.value))}
+            className="w-full bg-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 outline-none"
+          />
         </div>
       </div>
 
