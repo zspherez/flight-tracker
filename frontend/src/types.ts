@@ -29,6 +29,8 @@ export interface SearchParams {
   seat_type?: string;
   airlines?: string[];
   layover_airports?: string[];
+  departure_from?: number;
+  departure_to?: number;
   exclude_basic_economy?: boolean;
 }
 

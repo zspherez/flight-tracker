@@ -12,6 +12,7 @@ from fli.models import (
     PassengerInfo,
     SeatType,
     SortBy,
+    TimeRestrictions,
     TripType,
 )
 from fli.search import SearchFlights
@@ -40,10 +41,18 @@ def _resolve_seat_type(s: str) -> SeatType:
 
 def _run_search(params: SearchRequest) -> list[FlightResultResponse]:
     """Synchronous fli search — called via asyncio.to_thread."""
+    time_restrictions = None
+    if params.departure_from is not None or params.departure_to is not None:
+        time_restrictions = TimeRestrictions(
+            earliest_departure=params.departure_from,
+            latest_departure=params.departure_to,
+        )
+
     segment = FlightSegment(
         departure_airport=[[_resolve_airport(a), 0] for a in [params.origin]],
         arrival_airport=[[_resolve_airport(a), 0] for a in [params.destination]],
         travel_date=params.travel_date,
+        time_restrictions=time_restrictions,
     )
 
     layover = None

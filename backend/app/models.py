@@ -32,6 +32,8 @@ class SearchRequest(BaseModel):
     seat_type: str = "ECONOMY"
     airlines: list[str] | None = None
     layover_airports: list[str] | None = None
+    departure_from: int | None = None
+    departure_to: int | None = None
     exclude_basic_economy: bool = True
 
 
