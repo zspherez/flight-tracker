@@ -14,13 +14,14 @@ async def get_history(flight_id: int, limit: int = Query(500)):
     try:
         cursor = await db.execute(
             "SELECT price, checked_at FROM price_history "
-            "WHERE tracked_flight_id = ? ORDER BY checked_at ASC LIMIT ?",
+            "WHERE tracked_flight_id = ? ORDER BY checked_at DESC LIMIT ?",
             (flight_id, limit),
         )
         rows = await cursor.fetchall()
     finally:
         await db.close()
-    return [PriceHistoryPoint(price=r["price"], checked_at=r["checked_at"]) for r in rows]
+    # Reverse so chart displays oldest-to-newest
+    return [PriceHistoryPoint(price=r["price"], checked_at=r["checked_at"]) for r in reversed(rows)]
 
 
 @router.get("/notifications", response_model=list[NotificationResponse])

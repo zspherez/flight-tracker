@@ -60,7 +60,7 @@ export async function toggleFlight(id: number): Promise<TrackedFlight> {
 }
 
 export async function fetchHistory(id: number): Promise<PricePoint[]> {
-  const res = await fetch(`${BASE}/api/flights/${id}/history?limit=50000`);
+  const res = await fetch(`${BASE}/api/flights/${id}/history`);
   return res.json();
 }
 
