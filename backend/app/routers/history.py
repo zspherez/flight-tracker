@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from ..database import get_db
 from ..models import NotificationResponse, PriceHistoryPoint
-from ..notifier import register_token
+from ..notifier import register_token, send_push
 
 router = APIRouter(prefix="/api", tags=["history"])
 
@@ -67,3 +67,9 @@ class TokenRequest(BaseModel):
 async def register_device_token(req: TokenRequest):
     await register_token(req.token)
     return {"status": "registered"}
+
+
+@router.post("/test-push")
+async def test_push():
+    await send_push("Test Alert", "CHS\u2192EWR UA674 dropped to $450 (was $478)")
+    return {"status": "sent"}
