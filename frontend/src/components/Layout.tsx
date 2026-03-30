@@ -41,7 +41,12 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <nav className="bg-gray-800 border-b border-gray-700 px-6 py-3 flex items-center gap-4">
-        <span className="text-lg font-bold mr-4">Flight Tracker</span>
+        <Link to="/" className="flex items-center gap-2 mr-4 hover:opacity-80">
+          <svg className="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+          </svg>
+          <span className="text-lg font-bold">Flight Tracker</span>
+        </Link>
         <Link to="/" className={linkClass('/')}>Dashboard</Link>
         <Link to="/search" className={linkClass('/search')}>Search</Link>
         <div className="ml-auto flex items-center gap-3">
