@@ -17,7 +17,8 @@ async def check_all_prices():
         cursor = await db.execute(
             """SELECT tf.id, tf.flight_codes, tf.departure_time, tf.travel_date,
                       sc.from_airports, sc.to_airports, sc.max_stops, sc.seat_type,
-                      sc.airlines, sc.layover_airports, sc.exclude_basic_economy
+                      sc.airlines, sc.layover_airports, sc.exclude_basic_economy,
+                      sc.adults
                FROM tracked_flights tf
                JOIN search_configs sc ON sc.tracked_flight_id = tf.id
                WHERE tf.is_active = 1"""
@@ -35,7 +36,7 @@ async def check_all_prices():
         key = (
             f"{row['from_airports']}|{row['to_airports']}|{row['travel_date']}|"
             f"{row['max_stops']}|{row['seat_type']}|{row['airlines']}|"
-            f"{row['layover_airports']}|{row['exclude_basic_economy']}"
+            f"{row['layover_airports']}|{row['exclude_basic_economy']}|{row['adults']}"
         )
         if key not in groups:
             groups[key] = {
@@ -60,6 +61,7 @@ async def check_all_prices():
                 airlines=json.loads(config["airlines"]) if config["airlines"] else None,
                 layover_airports=json.loads(config["layover_airports"]) if config["layover_airports"] else None,
                 exclude_basic_economy=bool(config["exclude_basic_economy"]),
+                adults=config["adults"] if "adults" in config.keys() else 1,
             )
         except Exception as e:
             logger.error(f"Search failed: {e}")

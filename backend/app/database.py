@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS search_configs (
     airlines            TEXT,
     layover_airports    TEXT,
     exclude_basic_economy INTEGER NOT NULL DEFAULT 1,
+    adults              INTEGER NOT NULL DEFAULT 1,
     UNIQUE(tracked_flight_id)
 );
 

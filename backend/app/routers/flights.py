@@ -88,8 +88,8 @@ async def track_flight(req: TrackFlightRequest):
         await db.execute(
             """INSERT INTO search_configs
                (tracked_flight_id, from_airports, to_airports, max_stops,
-                seat_type, airlines, layover_airports, exclude_basic_economy)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                seat_type, airlines, layover_airports, exclude_basic_economy, adults)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 flight_id,
                 json.dumps(req.search_from_airports),
@@ -99,6 +99,7 @@ async def track_flight(req: TrackFlightRequest):
                 json.dumps(req.search_airlines) if req.search_airlines else None,
                 json.dumps(req.search_layover_airports) if req.search_layover_airports else None,
                 1,
+                req.adults,
             ),
         )
 

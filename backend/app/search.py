@@ -128,6 +128,7 @@ def _run_search_multi_airport(
     airlines: list[str] | None,
     layover_airports: list[str] | None,
     exclude_basic_economy: bool,
+    adults: int = 1,
 ) -> list[FlightResultResponse]:
     """Synchronous search with explicit multi-airport support (for scheduler)."""
     segment = FlightSegment(
@@ -148,7 +149,7 @@ def _run_search_multi_airport(
 
     filters = FlightSearchFilters(
         trip_type=TripType.ONE_WAY,
-        passenger_info=PassengerInfo(adults=1),
+        passenger_info=PassengerInfo(adults=adults),
         flight_segments=[segment],
         stops=_resolve_max_stops(max_stops),
         seat_type=_resolve_seat_type(seat_type),
@@ -211,12 +212,13 @@ async def search_flights_multi(
     airlines: list[str] | None,
     layover_airports: list[str] | None,
     exclude_basic_economy: bool,
+    adults: int = 1,
 ) -> list[FlightResultResponse]:
     return await asyncio.to_thread(
         _run_search_multi_airport,
         from_airports, to_airports, travel_date,
         max_stops, seat_type, airlines, layover_airports,
-        exclude_basic_economy,
+        exclude_basic_economy, adults,
     )
 
 
