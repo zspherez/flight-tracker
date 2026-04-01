@@ -3,6 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchFlights, fetchHistory } from '../api';
 import PriceChart from '../components/PriceChart';
 
+function fmt(total: number, adults: number) {
+  if (adults > 1) {
+    return `$${total.toFixed(0)} ($${Math.round(total / adults)}/pp)`;
+  }
+  return `$${total.toFixed(0)}`;
+}
+
 export default function FlightDetailPage() {
   const { id } = useParams<{ id: string }>();
   const flightId = Number(id);
@@ -24,6 +31,7 @@ export default function FlightDetailPage() {
     return <p className="text-gray-400">Flight not found.</p>;
   }
 
+  const a = flight.adults;
   const prices = history?.map(h => h.price) ?? [];
   const minPrice = prices.length ? Math.min(...prices) : null;
   const maxPrice = prices.length ? Math.max(...prices) : null;
@@ -39,6 +47,7 @@ export default function FlightDetailPage() {
         <div className="flex items-center gap-3 mb-2">
           <span className="font-mono font-bold text-xl">{flight.flight_codes}</span>
           <span className="text-gray-400">{flight.origin} {'->'} {flight.destination}</span>
+          {a > 1 && <span className="text-xs text-gray-500 bg-gray-700 px-2 py-0.5 rounded">{a} passengers</span>}
         </div>
         <div className="flex items-center gap-4 text-sm text-gray-400">
           <span>{flight.departure_time} - {flight.arrival_time}</span>
@@ -50,25 +59,25 @@ export default function FlightDetailPage() {
           <div className="bg-gray-700 rounded-lg p-3 text-center">
             <div className="text-xs text-gray-400 mb-1">Current</div>
             <div className="text-lg font-bold">
-              {flight.latest_price !== null ? `$${flight.latest_price.toFixed(0)}` : '--'}
+              {flight.latest_price !== null ? fmt(flight.latest_price, a) : '--'}
             </div>
           </div>
           <div className="bg-gray-700 rounded-lg p-3 text-center">
             <div className="text-xs text-gray-400 mb-1">Baseline</div>
             <div className="text-lg font-bold text-green-400">
-              {flight.baseline_price !== null ? `$${flight.baseline_price.toFixed(0)}` : '--'}
+              {flight.baseline_price !== null ? fmt(flight.baseline_price, a) : '--'}
             </div>
           </div>
           <div className="bg-gray-700 rounded-lg p-3 text-center">
             <div className="text-xs text-gray-400 mb-1">Min / Max</div>
             <div className="text-lg font-bold">
-              {minPrice !== null ? `$${minPrice.toFixed(0)} / $${maxPrice!.toFixed(0)}` : '--'}
+              {minPrice !== null ? `${fmt(minPrice, a)} / ${fmt(maxPrice!, a)}` : '--'}
             </div>
           </div>
           <div className="bg-gray-700 rounded-lg p-3 text-center">
             <div className="text-xs text-gray-400 mb-1">Average</div>
             <div className="text-lg font-bold">
-              {avgPrice !== null ? `$${avgPrice.toFixed(0)}` : '--'}
+              {avgPrice !== null ? fmt(avgPrice, a) : '--'}
             </div>
           </div>
         </div>

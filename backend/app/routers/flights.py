@@ -1,6 +1,7 @@
 import json
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from ..database import get_db
 from ..models import TrackFlightRequest, TrackedFlightResponse
@@ -20,13 +21,17 @@ async def _build_response(row) -> TrackedFlightResponse:
         latest = await cursor.fetchone()
         latest_price = latest["price"] if latest else None
 
-        # Baseline (all-time min)
-        cursor = await db.execute(
-            "SELECT MIN(price) as min_price FROM price_history WHERE tracked_flight_id = ?",
-            (row["id"],),
-        )
-        baseline_row = await cursor.fetchone()
-        baseline_price = baseline_row["min_price"] if baseline_row else None
+        # Baseline: custom if set, otherwise all-time min
+        custom = row["custom_baseline"] if "custom_baseline" in row.keys() else None
+        if custom is not None:
+            baseline_price = custom
+        else:
+            cursor = await db.execute(
+                "SELECT MIN(price) as min_price FROM price_history WHERE tracked_flight_id = ?",
+                (row["id"],),
+            )
+            baseline_row = await cursor.fetchone()
+            baseline_price = baseline_row["min_price"] if baseline_row else None
 
         price_change = None
         if latest_price is not None and baseline_price is not None:
@@ -151,6 +156,30 @@ async def toggle_flight(flight_id: int):
         row = await cursor.fetchone()
         if not row:
             raise HTTPException(404, "Flight not found")
+    finally:
+        await db.close()
+    return await _build_response(row)
+
+
+class SetBaselineRequest(BaseModel):
+    baseline: float | None
+
+
+@router.put("/flights/{flight_id}/baseline", response_model=TrackedFlightResponse)
+async def set_baseline(flight_id: int, req: SetBaselineRequest):
+    db = await get_db()
+    try:
+        cursor = await db.execute(
+            "UPDATE tracked_flights SET custom_baseline = ? WHERE id = ?",
+            (req.baseline, flight_id),
+        )
+        await db.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(404, "Flight not found")
+        cursor = await db.execute(
+            "SELECT * FROM tracked_flights WHERE id = ?", (flight_id,)
+        )
+        row = await cursor.fetchone()
     finally:
         await db.close()
     return await _build_response(row)

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchFlights, deleteFlight, toggleFlight } from '../api';
+import { fetchFlights, deleteFlight, toggleFlight, setBaseline } from '../api';
 import FlightCard from '../components/FlightCard';
 import { Link } from 'react-router-dom';
 
@@ -18,6 +18,11 @@ export default function DashboardPage() {
 
   const toggleM = useMutation({
     mutationFn: toggleFlight,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['flights'] }),
+  });
+
+  const baselineM = useMutation({
+    mutationFn: ({ id, baseline }: { id: number; baseline: number | null }) => setBaseline(id, baseline),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['flights'] }),
   });
 
@@ -56,6 +61,7 @@ export default function DashboardPage() {
           flight={f}
           onDelete={id => deleteM.mutate(id)}
           onToggle={id => toggleM.mutate(id)}
+          onSetBaseline={(id, baseline) => baselineM.mutate({ id, baseline })}
         />
       ))}
     </div>

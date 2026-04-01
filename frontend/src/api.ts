@@ -73,3 +73,12 @@ export async function fetchNotifications(): Promise<Notification[]> {
 export async function markNotificationRead(id: number): Promise<void> {
   await fetch(`${BASE}/api/notifications/${id}/read`, { method: 'PATCH' });
 }
+
+export async function setBaseline(id: number, baseline: number | null): Promise<TrackedFlight> {
+  const res = await fetch(`${BASE}/api/flights/${id}/baseline`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ baseline }),
+  });
+  return res.json();
+}
