@@ -1,7 +1,7 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --verbose --foreground-scripts 2>&1
 COPY . .
 RUN npx vite build
 
