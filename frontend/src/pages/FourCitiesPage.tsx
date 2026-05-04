@@ -202,7 +202,7 @@ export default function FourCitiesPage() {
 
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-6 flex-wrap gap-2 text-sm text-gray-400">
+      <div className="flex items-baseline justify-between mb-1 flex-wrap gap-2 text-sm text-gray-400">
         <span>
           Charleston required + {numCities - 1} of {'{NYC, Nashville, Chicago, Austin}'}
           {data?.travel_date && <> · Travel date: <span className="text-gray-200">{data.travel_date}</span></>}
@@ -214,6 +214,9 @@ export default function FourCitiesPage() {
           </span>
         </span>
       </div>
+      <p className="text-xs text-gray-500 mb-6 italic">
+        Filters out basic economy flights for flexibility's sake on challenge day
+      </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
         <aside className="space-y-6">
