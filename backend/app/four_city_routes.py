@@ -95,6 +95,7 @@ def _fetch_all_flights(travel_date: str):
                         "departure": leg.departure_datetime,
                         "arrival": leg.arrival_datetime,
                         "carrier": leg.airline,
+                        "carriers": [leg.airline],
                         "flight_number": leg.flight_number,
                         "duration": leg.duration,
                         "price": r.price,
@@ -139,6 +140,7 @@ def _fetch_all_flights(travel_date: str):
                         "stop_departure": leg2.departure_datetime,
                         "stop_layover": stop_layover,
                         "carrier": leg1.airline,
+                        "carriers": [leg1.airline, leg2.airline],
                         "flight_number": f"{leg1.flight_number}, {leg2.flight_number}",
                         "duration": r.duration,
                         "price": r.price,
@@ -234,7 +236,14 @@ def _find_routes(flights_by_origin: dict, connections: dict) -> list[dict]:
     valid = []
     other = ["NYC", "BNA", "ORD", "AUS"]
 
+    # 4-city routes: CHS + 3 of {NYC, BNA, ORD, AUS}
     for combo in combinations(other, 3):
+        cities = ["CHS"] + list(combo)
+        for perm in permutations(cities):
+            valid.extend(_find_for_route(list(perm), flights_by_origin, connections, relaxed=False))
+
+    # 3-city routes: CHS + 2 of {NYC, BNA, ORD, AUS}
+    for combo in combinations(other, 2):
         cities = ["CHS"] + list(combo)
         for perm in permutations(cities):
             valid.extend(_find_for_route(list(perm), flights_by_origin, connections, relaxed=False))

@@ -79,6 +79,7 @@ export interface FourCityBooking {
   departure: string;
   arrival: string;
   carrier: string;
+  carriers?: string[];  // newer payload: full carrier list across all legs in this booking
   flight_number: string;
   duration: number;
   price: number;

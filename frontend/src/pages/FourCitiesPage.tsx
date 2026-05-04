@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchFourCityRoutes } from '../api';
 import type { FourCityBooking, FourCitySolution } from '../types';
@@ -21,6 +21,27 @@ const CITY_LABELS: Record<string, string> = {
   AUS: 'Austin',
   BNA: 'Nashville',
 };
+
+const AIRLINE_LABELS: Record<string, string> = {
+  UA: 'United',
+  DL: 'Delta',
+  AA: 'American',
+  WN: 'Southwest',
+  B6: 'JetBlue',
+  AS: 'Alaska',
+  F9: 'Frontier',
+  NK: 'Spirit',
+};
+
+function carriersOf(b: FourCityBooking): string[] {
+  return b.carriers && b.carriers.length > 0 ? b.carriers : [b.carrier];
+}
+
+function solutionCarriers(s: FourCitySolution): Set<string> {
+  const set = new Set<string>();
+  for (const b of s.bookings) for (const c of carriersOf(b)) set.add(c);
+  return set;
+}
 
 const NYC_AIRPORTS = new Set(['LGA', 'JFK', 'EWR']);
 const CHICAGO_AIRPORTS = new Set(['ORD', 'MDW']);
@@ -126,6 +147,14 @@ function timeAgo(iso: string | null): string {
 export default function FourCitiesPage() {
   const [mct, setMct] = useState<Record<string, number>>({ ...DEFAULT_MCT });
   const [sort, setSort] = useState<SortMode>('cheapest');
+  const [airline, setAirline] = useState<string>('');  // '' means any
+  const [numCities, setNumCities] = useState<3 | 4>(4);
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = "Mother's Day Challenge Routes ✈️";
+    return () => { document.title = prev; };
+  }, []);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['four-city-routes'],
@@ -133,9 +162,24 @@ export default function FourCitiesPage() {
     refetchInterval: 60_000, // re-fetch the cached payload every minute
   });
 
+  const availableAirlines = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of data?.solutions ?? []) {
+      if (s.route.length !== numCities) continue;
+      for (const c of solutionCarriers(s)) set.add(c);
+    }
+    return [...set].sort();
+  }, [data, numCities]);
+
   const filteredSorted = useMemo(() => {
     if (!data?.solutions) return [];
-    const filtered = data.solutions.filter((s) => isSolutionValid(s, mct));
+    let filtered = data.solutions.filter((s) => s.route.length === numCities && isSolutionValid(s, mct));
+    if (airline) {
+      filtered = filtered.filter((s) => {
+        const cs = solutionCarriers(s);
+        return cs.size === 1 && cs.has(airline);
+      });
+    }
 
     const sorter: Record<SortMode, (a: FourCitySolution, b: FourCitySolution) => number> = {
       cheapest: (a, b) => a.total_price - b.total_price,
@@ -150,32 +194,35 @@ export default function FourCitiesPage() {
     };
 
     return [...filtered].sort(sorter[sort]);
-  }, [data, mct, sort]);
+  }, [data, mct, sort, airline, numCities]);
+
+  const totalForCount = useMemo(() => {
+    return (data?.solutions ?? []).filter((s) => s.route.length === numCities).length;
+  }, [data, numCities]);
 
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
-        <h1 className="text-2xl font-bold">Mother's Day Challenge ✈️</h1>
-        <div className="text-sm text-gray-400">
+      <div className="flex items-baseline justify-between mb-6 flex-wrap gap-2 text-sm text-gray-400">
+        <span>
+          Charleston required + {numCities - 1} of {'{NYC, Nashville, Chicago, Austin}'}
+          {data?.travel_date && <> · Travel date: <span className="text-gray-200">{data.travel_date}</span></>}
+        </span>
+        <span>
           Auto-refreshes every 30 min · Last refreshed:{' '}
           <span className="text-gray-200 font-medium" title={data?.refreshed_at ?? ''}>
             {timeAgo(data?.refreshed_at ?? null)}
           </span>
-        </div>
+        </span>
       </div>
-      <p className="text-sm text-gray-400 mb-6">
-        Charleston (CHS) required + 3 of {'{NYC, BNA, ORD, AUS}'}
-        {data?.travel_date && <> · Travel date: <span className="text-gray-200">{data.travel_date}</span></>}
-      </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
         <aside className="space-y-6">
           <div className="bg-gray-800 rounded-lg p-4">
             <h2 className="text-sm font-semibold mb-3">Minimum Connection Times (min)</h2>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1.5">
               {MCT_CITIES.map((city) => (
-                <label key={city} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-300">{CITY_LABELS[city] ?? city}</span>
+                <label key={city} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-gray-300 whitespace-nowrap">{CITY_LABELS[city] ?? city}</span>
                   <input
                     type="number"
                     min={0}
@@ -184,7 +231,7 @@ export default function FourCitiesPage() {
                     onChange={(e) =>
                       setMct((prev) => ({ ...prev, [city]: Number(e.target.value) || 0 }))
                     }
-                    className="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-right"
+                    className="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-right shrink-0"
                   />
                 </label>
               ))}
@@ -198,16 +245,52 @@ export default function FourCitiesPage() {
           </div>
 
           <div className="bg-gray-800 rounded-lg p-4">
-            <h2 className="text-sm font-semibold mb-3">Sort</h2>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortMode)}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-sm"
-            >
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+            <h2 className="text-sm font-semibold mb-3">Route length</h2>
+            <div className="flex rounded-md overflow-hidden border border-gray-700">
+              {([3, 4] as const).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setNumCities(n)}
+                  className={`flex-1 py-1.5 text-sm transition-colors ${
+                    numCities === n
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  {n} cities
+                </button>
               ))}
-            </select>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-4 space-y-3">
+            <div>
+              <label className="block text-sm font-semibold mb-2">Sort</label>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortMode)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-sm"
+              >
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2">Airline</label>
+              <select
+                value={airline}
+                onChange={(e) => setAirline(e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-2 text-sm"
+              >
+                <option value="">Any airline</option>
+                {availableAirlines.map((code) => (
+                  <option key={code} value={code}>
+                    {AIRLINE_LABELS[code] ?? code} only
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </aside>
 
@@ -215,14 +298,12 @@ export default function FourCitiesPage() {
           {isLoading && <p className="text-gray-400">Loading…</p>}
           {error && <p className="text-red-400">Failed to load: {String(error)}</p>}
           {data && data.solutions.length === 0 && (
-            <p className="text-gray-400">
-              No solutions cached yet. Hit "Refresh now" or wait for the next scheduled refresh.
-            </p>
+            <p className="text-gray-400">No solutions cached yet — wait for the next scheduled refresh.</p>
           )}
           {data && data.solutions.length > 0 && (
             <>
               <p className="text-sm text-gray-400 mb-4">
-                {filteredSorted.length} of {data.solutions.length} solutions match current MCTs
+                {filteredSorted.length} of {totalForCount} {numCities}-city solutions match current filters
               </p>
               <div className="space-y-4">
                 {filteredSorted.map((s, i) => (
