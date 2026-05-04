@@ -1,21 +1,26 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchFourCityRoutes, refreshFourCityRoutes } from '../api';
+import { useQuery } from '@tanstack/react-query';
+import { fetchFourCityRoutes } from '../api';
 import type { FourCityBooking, FourCitySolution } from '../types';
 
-// Default MCTs (minutes). User can override via the controls.
+// Default MCTs (minutes), per city. Airport-level MCT is derived from the city.
 const DEFAULT_MCT: Record<string, number> = {
-  AUS: 90,
+  NYC: 180,
   ORD: 150,
-  MDW: 150,
-  EWR: 180,
-  LGA: 180,
-  JFK: 180,
   CHS: 90,
+  AUS: 90,
   BNA: 90,
 };
 
-const MCT_AIRPORTS = ['LGA', 'JFK', 'EWR', 'ORD', 'MDW', 'CHS', 'AUS', 'BNA'];
+const MCT_CITIES = ['NYC', 'ORD', 'CHS', 'AUS', 'BNA'];
+
+const CITY_LABELS: Record<string, string> = {
+  NYC: 'New York City',
+  ORD: 'Chicago',
+  CHS: 'Charleston',
+  AUS: 'Austin',
+  BNA: 'Nashville',
+};
 
 const NYC_AIRPORTS = new Set(['LGA', 'JFK', 'EWR']);
 const CHICAGO_AIRPORTS = new Set(['ORD', 'MDW']);
@@ -42,11 +47,11 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'expensive', label: 'Most expensive → cheapest' },
   { value: 'shortest', label: 'Shortest → longest duration' },
   { value: 'longest', label: 'Longest → shortest duration' },
-  { value: 'earliest_NYC', label: 'Earliest arrival in NYC' },
-  { value: 'earliest_CHS', label: 'Earliest arrival in CHS' },
-  { value: 'earliest_BNA', label: 'Earliest arrival in BNA' },
-  { value: 'earliest_ORD', label: 'Earliest arrival in ORD' },
-  { value: 'earliest_AUS', label: 'Earliest arrival in AUS' },
+  { value: 'earliest_NYC', label: 'Hit NYC earlier' },
+  { value: 'earliest_CHS', label: 'Hit CHS earlier' },
+  { value: 'earliest_BNA', label: 'Hit BNA earlier' },
+  { value: 'earliest_ORD', label: 'Hit ORD earlier' },
+  { value: 'earliest_AUS', label: 'Hit AUS earlier' },
 ];
 
 function formatDuration(min: number): string {
@@ -88,16 +93,17 @@ function earliestArrivalAtCity(s: FourCitySolution, city: string): number | null
 }
 
 function isSolutionValid(s: FourCitySolution, mct: Record<string, number>): boolean {
-  // gaps[i] is the gap after bookings[i]; the airport is bookings[i].destination
+  // gaps[i] is the gap after bookings[i]; the relevant city is bookings[i].destination's city
   for (let i = 0; i < s.gaps.length; i++) {
-    const dest = s.bookings[i].destination;
-    const min = mct[dest] ?? 60;
+    const city = cityFromAirport(s.bookings[i].destination);
+    const min = mct[city] ?? 60;
     if (s.gaps[i] < min) return false;
   }
-  // Connection inner-layovers (stop_layover) must satisfy MCT at the stop airport
+  // Connection inner-layovers (stop_layover) must satisfy MCT at the stop city
   for (const b of s.bookings) {
     if (b.is_connection && b.stop && b.stop_layover != null) {
-      const min = mct[b.stop] ?? 60;
+      const city = cityFromAirport(b.stop);
+      const min = mct[city] ?? 60;
       if (b.stop_layover < min) return false;
     }
   }
@@ -118,7 +124,6 @@ function timeAgo(iso: string | null): string {
 }
 
 export default function FourCitiesPage() {
-  const queryClient = useQueryClient();
   const [mct, setMct] = useState<Record<string, number>>({ ...DEFAULT_MCT });
   const [sort, setSort] = useState<SortMode>('cheapest');
 
@@ -126,11 +131,6 @@ export default function FourCitiesPage() {
     queryKey: ['four-city-routes'],
     queryFn: fetchFourCityRoutes,
     refetchInterval: 60_000, // re-fetch the cached payload every minute
-  });
-
-  const refreshM = useMutation({
-    mutationFn: refreshFourCityRoutes,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['four-city-routes'] }),
   });
 
   const filteredSorted = useMemo(() => {
@@ -155,19 +155,12 @@ export default function FourCitiesPage() {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
-        <h1 className="text-2xl font-bold">4-City Routes</h1>
+        <h1 className="text-2xl font-bold">Mother's Day Challenge ✈️</h1>
         <div className="text-sm text-gray-400">
           Auto-refreshes every 30 min · Last refreshed:{' '}
           <span className="text-gray-200 font-medium" title={data?.refreshed_at ?? ''}>
             {timeAgo(data?.refreshed_at ?? null)}
           </span>
-          <button
-            onClick={() => refreshM.mutate()}
-            disabled={refreshM.isPending}
-            className="ml-3 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-50 px-2 py-1 rounded"
-          >
-            {refreshM.isPending ? 'Refreshing…' : 'Refresh now'}
-          </button>
         </div>
       </div>
       <p className="text-sm text-gray-400 mb-6">
@@ -180,16 +173,16 @@ export default function FourCitiesPage() {
           <div className="bg-gray-800 rounded-lg p-4">
             <h2 className="text-sm font-semibold mb-3">Minimum Connection Times (min)</h2>
             <div className="grid grid-cols-2 gap-2">
-              {MCT_AIRPORTS.map((apt) => (
-                <label key={apt} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-300">{apt}</span>
+              {MCT_CITIES.map((city) => (
+                <label key={city} className="flex items-center justify-between text-sm">
+                  <span className="text-gray-300">{CITY_LABELS[city] ?? city}</span>
                   <input
                     type="number"
                     min={0}
                     step={5}
-                    value={mct[apt]}
+                    value={mct[city]}
                     onChange={(e) =>
-                      setMct((prev) => ({ ...prev, [apt]: Number(e.target.value) || 0 }))
+                      setMct((prev) => ({ ...prev, [city]: Number(e.target.value) || 0 }))
                     }
                     className="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-right"
                   />
@@ -255,7 +248,7 @@ function byEarliest(a: FourCitySolution, b: FourCitySolution, city: string): num
 
 function SolutionCard({ solution, index }: { solution: FourCitySolution; index: number }) {
   const dur = totalDurationMinutes(solution);
-  const route = solution.route.join(' → ');
+  const route = solution.route.map((c) => CITY_LABELS[c] ?? c).join(' → ');
   return (
     <div className="bg-gray-800 rounded-lg p-4">
       <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
@@ -295,7 +288,7 @@ function BookingRow({ booking, gap }: { booking: FourCityBooking; gap: number | 
           </span>{' '}
           | {dep} – {arr} ({formatDuration(flightDur)}) | ${booking.price.toFixed(2)}{' '}
           <span className="text-blue-400">
-            ✈ 1 booking, layover ({formatLayover(booking.stop_layover ?? 0)} in {booking.stop})
+            ✈ Book as one flight with {formatLayover(booking.stop_layover ?? 0)} layover in {booking.stop}
           </span>
         </div>
       ) : (

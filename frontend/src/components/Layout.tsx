@@ -49,7 +49,6 @@ export default function Layout() {
         </Link>
         <Link to="/" className={linkClass('/')}>Dashboard</Link>
         <Link to="/search" className={linkClass('/search')}>Search</Link>
-        <Link to="/four-cities" className={linkClass('/four-cities')}>4 Cities</Link>
         <div className="ml-auto flex items-center gap-3">
           {!pushEnabled && (
             <button
