@@ -1,4 +1,4 @@
-import type { AirportOption, FlightResult, Notification, PricePoint, SearchParams, TrackedFlight } from './types';
+import type { AirportOption, FlightResult, FourCityRoutesResponse, Notification, PricePoint, SearchParams, TrackedFlight } from './types';
 
 const BASE = '';
 
@@ -80,5 +80,17 @@ export async function setBaseline(id: number, baseline: number | null): Promise<
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ baseline }),
   });
+  return res.json();
+}
+
+export async function fetchFourCityRoutes(): Promise<FourCityRoutesResponse> {
+  const res = await fetch(`${BASE}/api/four-city/routes`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function refreshFourCityRoutes(): Promise<FourCityRoutesResponse> {
+  const res = await fetch(`${BASE}/api/four-city/refresh`, { method: 'POST' });
+  if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

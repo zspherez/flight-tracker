@@ -72,3 +72,39 @@ export interface AirportOption {
   code: string;
   name: string;
 }
+
+export interface FourCityBooking {
+  origin: string;
+  destination: string;
+  departure: string;
+  arrival: string;
+  carrier: string;
+  flight_number: string;
+  duration: number;
+  price: number;
+  is_connection: boolean;
+  // connection-only:
+  stop?: string;
+  stop_arrival?: string;
+  stop_departure?: string;
+  stop_layover?: number;
+  origin_city?: string;
+  stop_city?: string;
+  dest_city?: string;
+}
+
+export interface FourCitySolution {
+  route: string[];
+  bookings: FourCityBooking[];
+  gaps: number[];
+  total_price: number;
+  departure_time: string;
+  arrival_time: string;
+  relaxed: boolean;
+}
+
+export interface FourCityRoutesResponse {
+  travel_date: string | null;
+  solutions: FourCitySolution[];
+  refreshed_at: string | null;
+}
