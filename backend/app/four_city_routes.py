@@ -248,6 +248,11 @@ def _find_routes(flights_by_origin: dict, connections: dict) -> list[dict]:
         for perm in permutations(cities):
             valid.extend(_find_for_route(list(perm), flights_by_origin, connections, relaxed=False))
 
+    # 5-city routes: all five
+    all_five = ["CHS"] + other
+    for perm in permutations(all_five):
+        valid.extend(_find_for_route(list(perm), flights_by_origin, connections, relaxed=False))
+
     return valid
 
 

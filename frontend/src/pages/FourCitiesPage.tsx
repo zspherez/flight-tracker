@@ -148,7 +148,7 @@ export default function FourCitiesPage() {
   const [mct, setMct] = useState<Record<string, number>>({ ...DEFAULT_MCT });
   const [sort, setSort] = useState<SortMode>('cheapest');
   const [airline, setAirline] = useState<string>('');  // '' means any
-  const [numCities, setNumCities] = useState<3 | 4>(4);
+  const [numCities, setNumCities] = useState<3 | 4 | 5>(4);
 
   useEffect(() => {
     const prev = document.title;
@@ -250,7 +250,7 @@ export default function FourCitiesPage() {
           <div className="bg-gray-800 rounded-lg p-4">
             <h2 className="text-sm font-semibold mb-3">Route length</h2>
             <div className="flex rounded-md overflow-hidden border border-gray-700">
-              {([3, 4] as const).map((n) => (
+              {([3, 4, 5] as const).map((n) => (
                 <button
                   key={n}
                   onClick={() => setNumCities(n)}
