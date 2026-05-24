@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 backend/data/
 frontend/certs/
+certs/
 .env
 *.db
 firebase-service-account.json

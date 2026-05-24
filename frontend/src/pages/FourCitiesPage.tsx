@@ -131,19 +131,6 @@ function isSolutionValid(s: FourCitySolution, mct: Record<string, number>): bool
   return true;
 }
 
-function timeAgo(iso: string | null): string {
-  if (!iso) return 'never';
-  const ms = Date.now() - new Date(iso).getTime();
-  if (ms < 0) return 'just now';
-  const sec = Math.floor(ms / 1000);
-  if (sec < 60) return `${sec}s ago`;
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ${min % 60}m ago`;
-  return new Date(iso).toLocaleString();
-}
-
 export default function FourCitiesPage() {
   const [mct, setMct] = useState<Record<string, number>>({ ...DEFAULT_MCT });
   const [sort, setSort] = useState<SortMode>('cheapest');
@@ -159,7 +146,6 @@ export default function FourCitiesPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['four-city-routes'],
     queryFn: fetchFourCityRoutes,
-    refetchInterval: 60_000, // re-fetch the cached payload every minute
   });
 
   const availableAirlines = useMemo(() => {
@@ -208,14 +194,14 @@ export default function FourCitiesPage() {
           {data?.travel_date && <> · Travel date: <span className="text-gray-200">{data.travel_date}</span></>}
         </span>
         <span>
-          Auto-refreshes every 30 min · Last refreshed:{' '}
+          Snapshot from{' '}
           <span className="text-gray-200 font-medium" title={data?.refreshed_at ?? ''}>
-            {timeAgo(data?.refreshed_at ?? null)}
+            {data?.refreshed_at ? new Date(data.refreshed_at).toLocaleDateString() : '—'}
           </span>
         </span>
       </div>
       <p className="text-xs text-gray-500 mb-6 italic">
-        Filters out basic economy flights for flexibility's sake on challenge day
+        Mother's Day 2026 has passed; these are the routes as they were priced on challenge day. Basic economy excluded for flexibility.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
@@ -301,7 +287,7 @@ export default function FourCitiesPage() {
           {isLoading && <p className="text-gray-400">Loading…</p>}
           {error && <p className="text-red-400">Failed to load: {String(error)}</p>}
           {data && data.solutions.length === 0 && (
-            <p className="text-gray-400">No solutions cached yet — wait for the next scheduled refresh.</p>
+            <p className="text-gray-400">No cached routes available for this snapshot.</p>
           )}
           {data && data.solutions.length > 0 && (
             <>

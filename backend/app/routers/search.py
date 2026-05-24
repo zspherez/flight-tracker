@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 
 from ..models import FlightResultResponse, SearchRequest
+from ..rate_limit import FLI_BOUND, limiter
 from ..search import get_airport_codes, search_flights
 
 router = APIRouter(prefix="/api", tags=["search"])
 
 
 @router.post("/search", response_model=list[FlightResultResponse])
-async def search(params: SearchRequest):
+@limiter.limit(FLI_BOUND)
+async def search(request: Request, params: SearchRequest):
     return await search_flights(params)
 
 

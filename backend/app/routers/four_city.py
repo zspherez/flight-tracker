@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
 from ..config import FOUR_CITY_TRAVEL_DATE
 from ..four_city_routes import get_cached_routes, refresh_routes
+from ..rate_limit import FLI_BOUND, limiter
 
 router = APIRouter(prefix="/api/four-city", tags=["four-city"])
 
@@ -18,7 +19,8 @@ async def get_routes():
 
 
 @router.post("/refresh")
-async def force_refresh():
+@limiter.limit(FLI_BOUND)
+async def force_refresh(request: Request):
     """Trigger an immediate refresh."""
     await refresh_routes(FOUR_CITY_TRAVEL_DATE)
     return await get_cached_routes()

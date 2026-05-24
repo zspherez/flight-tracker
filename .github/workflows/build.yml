@@ -1,0 +1,159 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+    # Skip rebuild + redeploy when a push only touches docs or non-runtime files.
+    # paths-ignore is "any non-ignored file changed → run", so a mixed commit
+    # (README + src) still triggers.
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.gitattributes'
+      - '.editorconfig'
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive   # fli lives at backend/fli as a submodule
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/backend
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=,format=short
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/frontend
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=,format=short
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  deploy:
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Load SSH key into agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Trust the deploy host
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Materialize Firebase service-account JSON
+        env:
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$SA_JSON" ]; then
+            echo "FIREBASE_SERVICE_ACCOUNT_JSON not set" >&2
+            exit 1
+          fi
+          printf '%s' "$SA_JSON" > /tmp/firebase-service-account.json
+          chmod 600 /tmp/firebase-service-account.json
+          if ! python3 -c "import json; d=json.load(open('/tmp/firebase-service-account.json')); assert d.get('client_email') and d.get('private_key'); print('client_email:', d['client_email'])"; then
+            echo "SA JSON is malformed or missing required fields" >&2
+            exit 1
+          fi
+          echo "Wrote SA JSON ($(wc -c < /tmp/firebase-service-account.json) bytes)"
+
+      - name: Push certs and restart containers
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          : "${REMOTE_DIR:=~/flight-tracker}"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p $REMOTE_DIR/certs"
+          scp /tmp/firebase-service-account.json "$DEPLOY_USER@$DEPLOY_HOST:$REMOTE_DIR/certs/firebase-service-account.json"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -lc "
+            set -e
+            cd $REMOTE_DIR
+            chmod 600 certs/firebase-service-account.json
+            git pull --ff-only
+            # Caddy comes from Docker Hub; backend + frontend from GHCR.
+            # Re-pulling Caddy every deploy exposes us to Docker Hub rate
+            # limits / transient outages, so only pull the images we publish.
+            docker compose pull backend frontend
+            docker compose up -d
+            docker compose ps
+          "
+
+      - name: Smoke test
+        env:
+          PUBLIC_BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+        run: |
+          if [ -z "$PUBLIC_BASE_URL" ]; then
+            echo "PUBLIC_BASE_URL not set; skipping smoke test"
+            exit 0
+          fi
+          # Backend cold-start + container restart can take ~30s.
+          for attempt in $(seq 1 20); do
+            if curl -fsS --max-time 4 "$PUBLIC_BASE_URL/api/airports?q=L" >/dev/null 2>&1; then
+              echo "Backend healthy at $PUBLIC_BASE_URL (attempt $attempt)"
+              exit 0
+            fi
+            echo "  attempt $attempt: not yet healthy, waiting…"
+            sleep 3
+          done
+          echo "Backend never became healthy after 60s" >&2
+          exit 1

@@ -10,7 +10,7 @@ from .database import get_db
 
 logger = logging.getLogger(__name__)
 
-SERVICE_ACCOUNT_PATH = Path(__file__).parent.parent / "firebase-service-account.json"
+SERVICE_ACCOUNT_PATH = Path("/app/certs/firebase-service-account.json")
 
 _initialized = False
 

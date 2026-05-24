@@ -1,12 +1,17 @@
 services:
   backend:
+    image: ghcr.io/zspherez/flight-tracker/backend:latest
     build: ./backend
     restart: unless-stopped
     network_mode: host
     volumes:
       - backend-data:/app/data
+      # Firebase service-account JSON. Materialized by the deploy workflow
+      # from secrets on the VM; placed in ./certs/ locally for dev.
+      - ./certs:/app/certs:ro
 
   frontend:
+    image: ghcr.io/zspherez/flight-tracker/frontend:latest
     build: ./frontend
     restart: unless-stopped
     network_mode: host
