@@ -188,6 +188,9 @@ export default function FourCitiesPage() {
 
   return (
     <div>
+      <div className="mb-4 rounded-md border border-amber-700/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-200">
+        Since the challenge has already occurred this year, this is dummy data for an arbitrary Sunday to prove the concept. Once airlines have announced their schedules for Mother's Day 2027, this will switch to that data soon afterwards.
+      </div>
       <div className="flex items-baseline justify-between mb-1 flex-wrap gap-2 text-sm text-gray-400">
         <span>
           Charleston required + {numCities - 1} of {'{NYC, Nashville, Chicago, Austin}'}
@@ -201,7 +204,7 @@ export default function FourCitiesPage() {
         </span>
       </div>
       <p className="text-xs text-gray-500 mb-6 italic">
-        Mother's Day 2026 has passed; these are the routes as they were priced on challenge day. Basic economy excluded for flexibility.
+        Basic economy excluded for flexibility on challenge day.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">

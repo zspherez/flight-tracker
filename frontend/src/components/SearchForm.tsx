@@ -9,7 +9,7 @@ interface Props {
 export default function SearchForm({ onSearch, loading }: Props) {
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
-  const [travelDate, setTravelDate] = useState('2026-05-10');
+  const [travelDate, setTravelDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [maxStops, setMaxStops] = useState('ANY');
   const [adults, setAdults] = useState(1);
   const [airlines, setAirlines] = useState('');

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 
 from ..config import FOUR_CITY_TRAVEL_DATE
 from ..four_city_routes import get_cached_routes, refresh_routes
@@ -20,7 +20,10 @@ async def get_routes():
 
 @router.post("/refresh")
 @limiter.limit(FLI_BOUND)
-async def force_refresh(request: Request):
-    """Trigger an immediate refresh."""
-    await refresh_routes(FOUR_CITY_TRAVEL_DATE)
+async def force_refresh(
+    request: Request,
+    travel_date: str = Query(default=FOUR_CITY_TRAVEL_DATE, regex=r"^\d{4}-\d{2}-\d{2}$"),
+):
+    """Trigger an immediate refresh. Pass ?travel_date=YYYY-MM-DD to override."""
+    await refresh_routes(travel_date)
     return await get_cached_routes()
