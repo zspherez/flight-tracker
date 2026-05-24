@@ -35,7 +35,7 @@ export interface SearchParams {
 }
 
 export interface TrackedFlight {
-  id: number;
+  id: string;
   origin: string;
   destination: string;
   travel_date: string;
@@ -60,7 +60,7 @@ export interface PricePoint {
 
 export interface Notification {
   id: number;
-  tracked_flight_id: number;
+  tracked_flight_id: string;
   message: string;
   old_price: number;
   new_price: number;

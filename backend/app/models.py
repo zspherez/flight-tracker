@@ -58,7 +58,7 @@ class TrackFlightRequest(BaseModel):
 
 
 class TrackedFlightResponse(BaseModel):
-    id: int
+    id: str
     origin: str
     destination: str
     travel_date: str
@@ -83,7 +83,7 @@ class PriceHistoryPoint(BaseModel):
 
 class NotificationResponse(BaseModel):
     id: int
-    tracked_flight_id: int
+    tracked_flight_id: str
     message: str
     old_price: float
     new_price: float

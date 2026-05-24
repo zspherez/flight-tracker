@@ -4,9 +4,9 @@ import type { TrackedFlight } from '../types';
 
 interface Props {
   flight: TrackedFlight;
-  onDelete: (id: number) => void;
-  onToggle: (id: number) => void;
-  onSetBaseline: (id: number, baseline: number | null) => void;
+  onDelete: (id: string) => void;
+  onToggle: (id: string) => void;
+  onSetBaseline: (id: string, baseline: number | null) => void;
 }
 
 export default function FlightCard({ flight, onDelete, onToggle, onSetBaseline }: Props) {

@@ -51,16 +51,16 @@ export async function trackFlight(result: FlightResult, search: SearchParams): P
   return res.json();
 }
 
-export async function deleteFlight(id: number): Promise<void> {
+export async function deleteFlight(id: string): Promise<void> {
   await fetch(`${BASE}/api/flights/${id}`, { method: 'DELETE' });
 }
 
-export async function toggleFlight(id: number): Promise<TrackedFlight> {
+export async function toggleFlight(id: string): Promise<TrackedFlight> {
   const res = await fetch(`${BASE}/api/flights/${id}`, { method: 'PATCH' });
   return res.json();
 }
 
-export async function fetchHistory(id: number): Promise<PricePoint[]> {
+export async function fetchHistory(id: string): Promise<PricePoint[]> {
   const res = await fetch(`${BASE}/api/flights/${id}/history`);
   return res.json();
 }
@@ -74,7 +74,7 @@ export async function markNotificationRead(id: number): Promise<void> {
   await fetch(`${BASE}/api/notifications/${id}/read`, { method: 'PATCH' });
 }
 
-export async function setBaseline(id: number, baseline: number | null): Promise<TrackedFlight> {
+export async function setBaseline(id: string, baseline: number | null): Promise<TrackedFlight> {
   const res = await fetch(`${BASE}/api/flights/${id}/baseline`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

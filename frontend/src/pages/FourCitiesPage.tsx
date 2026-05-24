@@ -189,7 +189,7 @@ export default function FourCitiesPage() {
   return (
     <div>
       <div className="mb-4 rounded-md border border-amber-700/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-200">
-        Since the challenge has already occurred this year, this is dummy data for an arbitrary Sunday to prove the concept. Once airlines have announced their schedules for Mother's Day 2027, this will switch to that data soon afterwards.
+        Since the challenge has already occurred this year, this is data for an arbitrary Sunday to demo the concept, and is based on the 2026 challenge requirements. Once Mother's Ruin has announced the updated challenge details, and airlines have announced their schedules for Mother's Day 2027, this will be updated to reflect.
       </div>
       <div className="flex items-baseline justify-between mb-1 flex-wrap gap-2 text-sm text-gray-400">
         <span>

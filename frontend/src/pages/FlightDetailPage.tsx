@@ -12,7 +12,6 @@ function fmt(total: number, adults: number) {
 
 export default function FlightDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const flightId = Number(id);
 
   const { data: flights } = useQuery({
     queryKey: ['flights'],
@@ -20,12 +19,13 @@ export default function FlightDetailPage() {
   });
 
   const { data: history, isLoading } = useQuery({
-    queryKey: ['history', flightId],
-    queryFn: () => fetchHistory(flightId),
+    queryKey: ['history', id],
+    queryFn: () => fetchHistory(id!),
     refetchInterval: 60000,
+    enabled: Boolean(id),
   });
 
-  const flight = flights?.find(f => f.id === flightId);
+  const flight = flights?.find(f => f.id === id);
 
   if (!flight) {
     return <p className="text-gray-400">Flight not found.</p>;

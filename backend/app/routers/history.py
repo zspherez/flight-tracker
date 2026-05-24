@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api", tags=["history"])
 
 
 @router.get("/flights/{flight_id}/history", response_model=list[PriceHistoryPoint])
-async def get_history(flight_id: int, limit: int = Query(10000)):
+async def get_history(flight_id: str, limit: int = Query(10000)):
     db = await get_db()
     try:
         cursor = await db.execute(

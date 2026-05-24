@@ -1,4 +1,5 @@
 import json
+import uuid
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -74,21 +75,22 @@ async def list_flights():
 
 @router.post("/flights", response_model=TrackedFlightResponse, status_code=201)
 async def track_flight(req: TrackFlightRequest):
+    flight_id = uuid.uuid4().hex
     db = await get_db()
     try:
-        cursor = await db.execute(
+        await db.execute(
             """INSERT INTO tracked_flights
-               (origin, destination, travel_date, flight_codes,
+               (id, origin, destination, travel_date, flight_codes,
                 departure_time, arrival_time, stops, duration, adults, label)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
+                flight_id,
                 req.origin, req.destination, req.travel_date, req.flight_codes,
                 req.departure_time, req.arrival_time, req.stops, req.duration,
                 req.adults,
                 req.label or f"{req.origin}→{req.destination} {req.flight_codes}",
             ),
         )
-        flight_id = cursor.lastrowid
 
         await db.execute(
             """INSERT INTO search_configs
@@ -127,7 +129,7 @@ async def track_flight(req: TrackFlightRequest):
 
 
 @router.delete("/flights/{flight_id}", status_code=204)
-async def delete_flight(flight_id: int):
+async def delete_flight(flight_id: str):
     db = await get_db()
     try:
         await db.execute("DELETE FROM notifications WHERE tracked_flight_id = ?", (flight_id,))
@@ -142,7 +144,7 @@ async def delete_flight(flight_id: int):
 
 
 @router.patch("/flights/{flight_id}", response_model=TrackedFlightResponse)
-async def toggle_flight(flight_id: int):
+async def toggle_flight(flight_id: str):
     db = await get_db()
     try:
         await db.execute(
@@ -166,7 +168,7 @@ class SetBaselineRequest(BaseModel):
 
 
 @router.put("/flights/{flight_id}/baseline", response_model=TrackedFlightResponse)
-async def set_baseline(flight_id: int, req: SetBaselineRequest):
+async def set_baseline(flight_id: str, req: SetBaselineRequest):
     db = await get_db()
     try:
         cursor = await db.execute(

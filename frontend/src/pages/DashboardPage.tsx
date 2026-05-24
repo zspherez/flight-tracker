@@ -22,7 +22,7 @@ export default function DashboardPage() {
   });
 
   const baselineM = useMutation({
-    mutationFn: ({ id, baseline }: { id: number; baseline: number | null }) => setBaseline(id, baseline),
+    mutationFn: ({ id, baseline }: { id: string; baseline: number | null }) => setBaseline(id, baseline),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['flights'] }),
   });
 
