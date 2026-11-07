@@ -164,8 +164,9 @@ jobs:
           printf '%s' "$GHCR_TOKEN" | ssh "$DEPLOY_USER@$DEPLOY_HOST" "
             set -e
             cd $REMOTE_DIR
-            export DOCKER_CONFIG=\$(mktemp -d)
-            trap 'rm -f \"\$DOCKER_CONFIG/config.json\"; rmdir \"\$DOCKER_CONFIG\"' EXIT
+            DOCKER_CONFIG=\$(mktemp -d /tmp/flight-tracker-docker.XXXXXX)
+            export DOCKER_CONFIG
+            trap 'rm -rf -- \"\$DOCKER_CONFIG\"' EXIT
             docker login ghcr.io --username '$GHCR_USER' --password-stdin
             chmod 600 certs/firebase-service-account.json
             git pull --ff-only
