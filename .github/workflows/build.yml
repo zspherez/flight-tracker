@@ -149,13 +149,18 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ github.token }}
         run: |
           : "${REMOTE_DIR:=~/flight-tracker}"
           ssh "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p $REMOTE_DIR/certs"
           scp /tmp/firebase-service-account.json "$DEPLOY_USER@$DEPLOY_HOST:$REMOTE_DIR/certs/firebase-service-account.json"
-          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -lc "
+          printf '%s' "$GHCR_TOKEN" | ssh "$DEPLOY_USER@$DEPLOY_HOST" "
             set -e
             cd $REMOTE_DIR
+            export DOCKER_CONFIG=\$(mktemp -d)
+            trap 'rm -f \"\$DOCKER_CONFIG/config.json\"; rmdir \"\$DOCKER_CONFIG\"' EXIT
+            docker login ghcr.io --username '$GHCR_USER' --password-stdin
             chmod 600 certs/firebase-service-account.json
             git pull --ff-only
             # Caddy comes from Docker Hub; backend + frontend from GHCR.
