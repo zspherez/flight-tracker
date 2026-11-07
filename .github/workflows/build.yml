@@ -163,6 +163,8 @@ jobs:
             docker login ghcr.io --username '$GHCR_USER' --password-stdin
             chmod 600 certs/firebase-service-account.json
             git pull --ff-only
+            # Preserve container images, volumes, and other projects' caches.
+            docker image prune --all --force --filter 'label=org.opencontainers.image.source=https://github.com/zspherez/flight-tracker'
             # Caddy comes from Docker Hub; backend + frontend from GHCR.
             # Re-pulling Caddy every deploy exposes us to Docker Hub rate
             # limits / transient outages, so only pull the images we publish.
