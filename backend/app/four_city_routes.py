@@ -70,7 +70,7 @@ def _fetch_all_flights(travel_date: str):
                     seat_type="ECONOMY",
                     airlines=None,
                     layover_airports=None,
-                    exclude_basic_economy=True,
+                    exclude_basic_economy=False,
                 )
             except Exception as e:
                 logger.error(f"Search {orig_city}→{dest_city} failed: {e}")

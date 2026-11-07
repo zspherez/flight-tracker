@@ -97,7 +97,10 @@ export default function PriceChart({ data, baseline }: Props) {
               borderRadius: 8,
             }}
             labelStyle={{ color: '#9ca3af', marginBottom: 4 }}
-            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Price']}
+            formatter={(value) => [
+              typeof value === 'number' ? `$${value.toFixed(2)}` : value,
+              'Price',
+            ]}
           />
           {baseline != null && (
             <ReferenceLine

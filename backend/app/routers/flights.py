@@ -105,7 +105,7 @@ async def track_flight(req: TrackFlightRequest):
                 req.search_seat_type,
                 json.dumps(req.search_airlines) if req.search_airlines else None,
                 json.dumps(req.search_layover_airports) if req.search_layover_airports else None,
-                1,
+                0,
                 req.adults,
             ),
         )

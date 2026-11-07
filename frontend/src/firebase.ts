@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, type MessagePayload, type Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBl3krngHSBGMcu3a_QK_t_nlttHala4Qc",
@@ -55,7 +55,7 @@ export async function requestNotificationPermission(): Promise<string | null> {
   }
 }
 
-export function onForegroundMessage(callback: (payload: any) => void) {
+export function onForegroundMessage(callback: (payload: MessagePayload) => void) {
   const msg = getMsg();
   if (msg) onMessage(msg, callback);
 }

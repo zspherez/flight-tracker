@@ -17,6 +17,7 @@ from fli.models import (
 )
 from fli.search import SearchFlights
 
+from .airports import AIRPORT_GROUPS, resolve_airports
 from .models import FlightResultResponse, LegResponse, SearchRequest
 
 # Spirit excluded globally
@@ -49,8 +50,8 @@ def _run_search(params: SearchRequest) -> list[FlightResultResponse]:
         )
 
     segment = FlightSegment(
-        departure_airport=[[_resolve_airport(a), 0] for a in [params.origin]],
-        arrival_airport=[[_resolve_airport(a), 0] for a in [params.destination]],
+        departure_airport=[[a, 0] for a in resolve_airports(params.origin)],
+        arrival_airport=[[a, 0] for a in resolve_airports(params.destination)],
         travel_date=params.travel_date,
         time_restrictions=time_restrictions,
     )
@@ -78,6 +79,8 @@ def _run_search(params: SearchRequest) -> list[FlightResultResponse]:
     )
 
     results = SearchFlights().search(filters)
+    if results is None:
+        return []
 
     # Filter out Spirit
     results = [
@@ -132,8 +135,8 @@ def _run_search_multi_airport(
 ) -> list[FlightResultResponse]:
     """Synchronous search with explicit multi-airport support (for scheduler)."""
     segment = FlightSegment(
-        departure_airport=[[_resolve_airport(a), 0] for a in from_airports],
-        arrival_airport=[[_resolve_airport(a), 0] for a in to_airports],
+        departure_airport=[[a, 0] for code in from_airports for a in resolve_airports(code)],
+        arrival_airport=[[a, 0] for code in to_airports for a in resolve_airports(code)],
         travel_date=travel_date,
     )
 
@@ -159,7 +162,12 @@ def _run_search_multi_airport(
         layover_restrictions=layover,
     )
 
+    if exclude_basic_economy:
+        raise ValueError("Excluding basic economy is not supported by Google Flights search")
+
     results = SearchFlights().search(filters)
+    if results is None:
+        return []
     results = [
         r for r in results
         if not any(leg.airline.name in EXCLUDED_AIRLINES for leg in r.legs)
@@ -224,4 +232,7 @@ async def search_flights_multi(
 
 def get_airport_codes() -> list[dict]:
     """Return all airport codes for autocomplete."""
-    return [{"code": a.name, "name": a.value} for a in Airport]
+    return [
+        {"code": code, "name": f"New York City ({', '.join(airports)})"}
+        for code, airports in AIRPORT_GROUPS.items()
+    ] + [{"code": a.name, "name": a.value} for a in Airport]

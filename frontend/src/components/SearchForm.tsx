@@ -16,7 +16,6 @@ export default function SearchForm({ onSearch, loading }: Props) {
   const [layoverAirports, setLayoverAirports] = useState('');
   const [departureFrom, setDepartureFrom] = useState('');
   const [departureTo, setDepartureTo] = useState('');
-  const [excludeBasic, setExcludeBasic] = useState(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +29,7 @@ export default function SearchForm({ onSearch, loading }: Props) {
       layover_airports: layoverAirports ? layoverAirports.split(',').map(a => a.trim().toUpperCase()) : undefined,
       departure_from: departureFrom ? Number(departureFrom) : undefined,
       departure_to: departureTo ? Number(departureTo) : undefined,
-      exclude_basic_economy: excludeBasic,
+      exclude_basic_economy: false,
     });
   };
 
@@ -52,7 +51,7 @@ export default function SearchForm({ onSearch, loading }: Props) {
           <input
             value={destination}
             onChange={e => setDestination(e.target.value)}
-            placeholder="EWR"
+            placeholder="EWR or NYC"
             required
             className="w-full bg-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 outline-none"
           />
@@ -135,16 +134,19 @@ export default function SearchForm({ onSearch, loading }: Props) {
             />
           </div>
         </div>
-        <div className="flex items-end">
-          <label className="flex items-center gap-2 cursor-pointer pb-2">
+        <div className="flex flex-col justify-end">
+          <label className="flex items-center gap-2 pb-2">
             <input
               type="checkbox"
-              checked={excludeBasic}
-              onChange={e => setExcludeBasic(e.target.checked)}
+              checked={false}
+              disabled
               className="w-4 h-4 rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-sm text-gray-400">Exclude basic economy</span>
           </label>
+          <p className="text-xs text-gray-400">
+            Unavailable with the current Google Flights search. Results and tracked prices may include basic economy.
+          </p>
         </div>
       </div>
 

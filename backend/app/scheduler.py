@@ -51,6 +51,11 @@ async def check_all_prices():
         config = group["config"]
         tracked = group["flights"]
 
+        if config["exclude_basic_economy"]:
+            logger.warning(
+                "Basic-economy exclusion is unavailable; tracked prices may include basic economy"
+            )
+
         try:
             results = await search_flights_multi(
                 from_airports=json.loads(config["from_airports"]),
@@ -60,7 +65,7 @@ async def check_all_prices():
                 seat_type=config["seat_type"],
                 airlines=json.loads(config["airlines"]) if config["airlines"] else None,
                 layover_airports=json.loads(config["layover_airports"]) if config["layover_airports"] else None,
-                exclude_basic_economy=bool(config["exclude_basic_economy"]),
+                exclude_basic_economy=False,
                 adults=config["adults"] if "adults" in config.keys() else 1,
             )
         except Exception as e:

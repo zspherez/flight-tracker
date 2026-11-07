@@ -1,4 +1,8 @@
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, field_validator
+
+from .airports import resolve_airports
 
 
 class LegResponse(BaseModel):
@@ -34,7 +38,13 @@ class SearchRequest(BaseModel):
     layover_airports: list[str] | None = None
     departure_from: int | None = None
     departure_to: int | None = None
-    exclude_basic_economy: bool = True
+    exclude_basic_economy: Literal[False] = False
+
+    @field_validator("origin", "destination")
+    @classmethod
+    def validate_airport(cls, value: str) -> str:
+        resolve_airports(value)
+        return value.strip().upper()
 
 
 class TrackFlightRequest(BaseModel):
