@@ -15,6 +15,11 @@ on:
       - '.editorconfig'
       - '**/*.md'
   workflow_dispatch:
+    inputs:
+      cleanup_docker_cache:
+        description: Remove unused dangling images and build cache before deploying
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -151,6 +156,7 @@ jobs:
           REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ github.token }}
+          CLEANUP_DOCKER_CACHE: ${{ inputs.cleanup_docker_cache || false }}
         run: |
           : "${REMOTE_DIR:=~/flight-tracker}"
           ssh "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p $REMOTE_DIR/certs"
@@ -165,7 +171,10 @@ jobs:
             git pull --ff-only
             df -h .
             docker system df
-            docker image ls --format '{{.ID}} {{.Repository}}:{{.Tag}} {{.Size}}'
+            if [ '$CLEANUP_DOCKER_CACHE' = 'true' ]; then
+              docker image prune --force
+              docker builder prune --force
+            fi
             # Preserve container images, volumes, and other projects' caches.
             docker image prune --all --force --filter 'label=org.opencontainers.image.source=https://github.com/zspherez/flight-tracker'
             # Caddy comes from Docker Hub; backend + frontend from GHCR.
